@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گوٹ فارم ڈائلی و منتھلی مینجر | Goat Farm Manager</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Noto Sans Urdu Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Urdu', 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-emerald-900 text-white flex-shrink-0">
+            <div class="p-5 text-center border-b border-emerald-800">
+                <h1 class="text-2xl font-bold text-amber-400"><i class="fa-solid fa-shapes ml-2"></i>الرعی گوٹ فارم</h1>
+                <p class="text-xs text-emerald-300 mt-1">روزانہ و ماہانہ مینجمنٹ سسٹم</p>
+            </div>
+            <nav class="p-4 space-y-2">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="nav-btn w-full flex items-center p-3 rounded-lg bg-emerald-800 text-white font-medium hover:bg-emerald-700 transition">
+                    <i class="fa-solid fa-chart-pie ml-3 text-amber-300"></i> ڈیش بورڈ (Dashboard)
+                </button>
+                <button onclick="switchTab('herd')" id="btn-herd" class="nav-btn w-full flex items-center p-3 rounded-lg text-emerald-100 hover:bg-emerald-800 transition">
+                    <i class="fa-solid fa-boxes-packing ml-3 text-amber-300"></i> جانوروں کا رجسٹر (Herd)
+                </button>
+                <button onclick="switchTab('health')" id="btn-health" class="nav-btn w-full flex items-center p-3 rounded-lg text-emerald-100 hover:bg-emerald-800 transition">
+                    <i class="fa-solid fa-heart-pulse ml-3 text-amber-300"></i> صحت و ادویات (Health)
+                </button>
+                <button onclick="switchTab('finance')" id="btn-finance" class="nav-btn w-full flex items-center p-3 rounded-lg text-emerald-100 hover:bg-emerald-800 transition">
+                    <i class="fa-solid fa-calculator ml-3 text-amber-300"></i> مالیات و حساب (Finance)
+                </button>
+            </nav>
+            <div class="p-4 border-t border-emerald-800 text-center">
+                <button onclick="exportDataCSV()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white text-xs py-2 px-3 rounded-lg transition mb-2">
+                    <i class="fa-solid fa-file-csv ml-1"></i> ڈیٹا ایکسل میں ڈاؤن لوڈ کریں
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section id="dashboard" class="tab-content active space-y-6">
+                <!-- Date Filter Bar -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-5 rounded-xl shadow-sm border border-gray-100 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">فارم ڈیش بورڈ</h2>
+                        <p class="text-xs text-gray-500">روزانہ اور ماہانہ بنیادوں پر فارم کی کارکردگی</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-semibold text-gray-600">منتخب ماہ:</label>
+                        <input type="month" id="dashboard-month-filter" onchange="renderAll()" class="p-2 border rounded-lg text-sm bg-gray-50 outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <!-- Monthly Stats Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">کل جانور</p>
+                            <h3 id="stat-total-goats" class="text-2xl font-bold text-emerald-900 mt-1">0</h3>
+                        </div>
+                        <div class="p-3 bg-emerald-100 text-emerald-700 rounded-lg"><i class="fa-solid fa-paw text-xl"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">اس ماہ کے اخراجات</p>
+                            <h3 id="stat-month-expense" class="text-2xl font-bold text-red-600 mt-1">Rs 0</h3>
+                        </div>
+                        <div class="p-3 bg-red-100 text-red-700 rounded-lg"><i class="fa-solid fa-arrow-down text-xl"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">اس ماہ کی آمدن</p>
+                            <h3 id="stat-month-income" class="text-2xl font-bold text-green-600 mt-1">Rs 0</h3>
+                        </div>
+                        <div class="p-3 bg-green-100 text-green-700 rounded-lg"><i class="fa-solid fa-arrow-up text-xl"></i></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-semibold">اس ماہ کی خالص بچت</p>
+                            <h3 id="stat-month-profit" class="text-2xl font-bold text-blue-600 mt-1">Rs 0</h3>
+                        </div>
+                        <div class="p-3 bg-blue-100 text-blue-700 rounded-lg"><i class="fa-solid fa-wallet text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- Daily Health & Activity Summaries -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Today's Health Alerts -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 class="font-bold text-base text-gray-800"><i class="fa-solid fa-bell text-amber-500 ml-2"></i>آج کے اہم صحتی الرٹس</h3>
+                            <span class="text-xs text-gray-400" id="current-date-display"></span>
+                        </div>
+                        <div id="dashboard-health-alerts" class="space-y-3">
+                            <!-- Populated via Javascript -->
+                        </div>
+                    </div>
+
+                    <!-- Daily SOP Checklist -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-base text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-list-check text-emerald-600 ml-2"></i>روزانہ کا فارم چیک لسٹ</h3>
+                        <div class="space-y-2 text-sm">
+                            <label class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded">
+                                <span>صبح کا ونڈا اور تازہ پانی کی فراہمی</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded">
+                                <span>شیڈ کی صفائی اور ہوا کی آمد و رفت کا معائنہ</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded">
+                                <span>سست یا بیمار جانوروں کا علیحدہ معائنہ</span>
+                            </label>
+                            <label class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
+                                <input type="checkbox" class="w-4 h-4 text-emerald-600 rounded">
+                                <span>شام کا چارہ اور منرل بلاک کی دستیابی</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: HERD REGISTRY -->
+            <section id="herd" class="tab-content space-y-6">
+                <div class="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">گلہ کا رجسٹر (Herd Registry)</h2>
+                        <p class="text-xs text-gray-500">فارم کے تمام چھوٹے اور بڑے جانوروں کا اندراج</p>
+                    </div>
+                    <button onclick="openModal('add-goat-modal')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
+                        <i class="fa-solid fa-plus ml-2"></i> نیا جانور درج کریں
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase border-b">
+                            <tr>
+                                <th class="p-4">ٹیگ #</th>
+                                <th class="p-4">نام</th>
+                                <th class="p-4">نسل</th>
+                                <th class="p-4">جنس</th>
+                                <th class="p-4">حالت / اسٹیٹس</th>
+                                <th class="p-4 text-center">حذف کریں</th>
+                            </tr>
+                        </thead>
+                        <tbody id="goat-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 3: HEALTH MANAGEMENT -->
+            <section id="health" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">روزانہ و ماہانہ صحت کا ریکارڈ</h2>
+                        <p class="text-xs text-gray-500">ویکسینیشن، ڈی ورمنگ (FAMACHA) اور علاج</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="date" id="health-date-filter" onchange="renderHealthTable()" class="p-2 border rounded-lg text-sm bg-gray-50">
+                        <button onclick="openModal('add-health-modal')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
+                            <i class="fa-solid fa-plus ml-2"></i> صحت ریکارڈ درج کریں
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase border-b">
+                            <tr>
+                                <th class="p-4">تاریخ</th>
+                                <th class="p-4">ٹیگ #</th>
+                                <th class="p-4">اقدام کا قسم</th>
+                                <th class="p-4">تفصیل / دوا</th>
+                                <th class="p-4 text-center">FAMACHA (1-5)</th>
+                                <th class="p-4 text-center">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="health-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAB 4: FINANCE MANAGEMENT -->
+            <section id="finance" class="tab-content space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">روزانہ و ماہانہ مالیات (Finance)</h2>
+                        <p class="text-xs text-gray-500">اخراجات اور آمدن کا مکمل حساب کتاب</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="month" id="finance-month-filter" onchange="renderFinanceTable()" class="p-2 border rounded-lg text-sm bg-gray-50">
+                        <button onclick="openModal('add-finance-modal')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-emerald-700 transition">
+                            <i class="fa-solid fa-plus ml-2"></i> لین دین درج کریں
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-gray-50 text-gray-600 text-xs font-semibold uppercase border-b">
+                            <tr>
+                                <th class="p-4">تاریخ</th>
+                                <th class="p-4">قسم</th>
+                                <th class="p-4">تفصیل / کیٹیگری</th>
+                                <th class="p-4">رقم (روپے)</th>
+                                <th class="p-4 text-center">حذف</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finance-table-body" class="divide-y divide-gray-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Add Goat Modal -->
+    <div id="add-goat-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-2">نیا جانور درج کریں</h3>
+            <form id="goat-form" onsubmit="saveGoat(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ٹیگ نمبر (Tag ID)</label>
+                    <input type="text" id="goat-tag" required class="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">نام / پہچان</label>
+                    <input type="text" id="goat-name" class="w-full p-2.5 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">نسل</label>
+                        <select id="goat-breed" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                            <option value="بیتل">بیتل</option>
+                            <option value="ٹیڈی">ٹیڈی</option>
+                            <option value="کاموری">کاموری</option>
+                            <option value="گلابی">گلابی</option>
+                            <option value="دیگر">دیگر</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">جنس</label>
+                        <select id="goat-gender" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                            <option value="بکری (مدین)">بکری (مدین)</option>
+                            <option value="بکرا (نر)">بکرا (نر)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">حالت</label>
+                    <select id="goat-status" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                        <option value="صحت مند">صحت مند</option>
+                        <option value="گابھن">گابھن (Pregnant)</option>
+                        <option value="زیرِ علاج">زیرِ علاج / بیمار</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('add-goat-modal')" class="px-4 py-2 text-sm bg-gray-100 rounded-lg">منسوخ</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg">سیو کریں</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Health Modal -->
+    <div id="add-health-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-2">صحت کا روزانہ/ماہانہ ریکارڈ درج کریں</h3>
+            <form id="health-form" onsubmit="saveHealthRecord(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">تاریخ</label>
+                    <input type="date" id="health-date" required class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">ٹیگ نمبر</label>
+                    <input type="text" id="health-tag" required class="w-full p-2.5 border rounded-lg text-sm outline-none" placeholder="GT-101">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">نوعیت</label>
+                    <select id="health-type" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                        <option value="روزانہ علاج">روزانہ علاج / دوا</option>
+                        <option value="ماہانہ ویکسین">ماہانہ ویکسین (CDT/PPR)</option>
+                        <option value="ڈی ورمنگ">ڈی ورمنگ (Deworming)</option>
+                        <option value="کھُروں کی کٹائی">کھُروں کی کٹائی (Hoof Trimming)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">تفصیل / دوا کا نام</label>
+                    <input type="text" id="health-desc" required class="w-full p-2.5 border rounded-lg text-sm outline-none" placeholder="مثلاً CDT بوسٹر ڈوز">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">FAMACHA اسکور (1 سے 5)</label>
+                    <select id="health-famacha" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                        <option value="-">- غیر اہم -</option>
+                        <option value="1 (سرخ - ٹھیک)">1 - سرخ (صحت مند)</option>
+                        <option value="2 (گلابی - ٹھیک)">2 - گلابی (صحت مند)</option>
+                        <option value="3 (ہلکا گلابی)">3 - ہلکا گلابی (توجہ دیں)</option>
+                        <option value="4 (سفید - کیڑے)">4 - سفید (ڈی ورمنگ کریں)</option>
+                        <option value="5 (شدید سست)">5 - شدید متاثرہ (ایمرجنسی)</option>
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('add-health-modal')" class="px-4 py-2 text-sm bg-gray-100 rounded-lg">منسوخ</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg">سیو کریں</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Finance Modal -->
+    <div id="add-finance-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 class="text-xl font-bold text-gray-800 border-b pb-2">مالیاتی ریکارڈ درج کریں</h3>
+            <form id="finance-form" onsubmit="saveFinanceRecord(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">تاریخ</label>
+                    <input type="date" id="finance-date" required class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">نوعیت</label>
+                    <select id="finance-type" class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                        <option value="expense">اخراجات (Expense)</option>
+                        <option value="income">آمدن (Income)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">تفصیل / کیٹیگری</label>
+                    <input type="text" id="finance-desc" placeholder="مثلاً ونڈا خریدا / دودھ بیچا" required class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">رقم (روپے)</label>
+                    <input type="number" id="finance-amount" required class="w-full p-2.5 border rounded-lg text-sm outline-none">
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button type="button" onclick="closeModal('add-finance-modal')" class="px-4 py-2 text-sm bg-gray-100 rounded-lg">منسوخ</button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg">سیو کریں</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // Set Default Dates to Today and Current Month
+        const todayStr = new Date().toISOString().split('T')[0];
+        const monthStr = todayStr.substring(0, 7);
+
+        document.getElementById('dashboard-month-filter').value = monthStr;
+        document.getElementById('health-date').value = todayStr;
+        document.getElementById('finance-date').value = todayStr;
+        document.getElementById('current-date-display').innerText = todayStr;
+
+        // Data Models
+        let herd = JSON.parse(localStorage.getItem('goat_herd_v2')) || [
+            { tag: "GT-101", name: "شیرا", breed: "بیتل", gender: "بکرا (نر)", status: "صحت مند" },
+            { tag: "GT-102", name: "گلابی 1", breed: "گلابی", gender: "بکری (مدین)", status: "گابھن" }
+        ];
+
+        let healthRecords = JSON.parse(localStorage.getItem('goat_health_v2')) || [
+            { date: todayStr, tag: "GT-101", type: "ماہانہ ویکسین", desc: "CDT Booster Dose", famacha: "1 (سرخ - ٹھیک)" }
+        ];
+
+        let financeRecords = JSON.parse(localStorage.getItem('goat_finance_v2')) || [
+            { date: todayStr, type: "expense", desc: "چارہ اور ونڈا خرید", amount: 8000 },
+            { date: todayStr, type: "income", desc: "دودھ کی فروخت", amount: 12000 }
+        ];
+
+        // Tab Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-800', 'text-white');
+                btn.classList.add('text-emerald-100');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-emerald-800', 'text-white');
+            activeBtn.classList.remove('text-emerald-100');
+
+            renderAll();
+        }
+
+        // Modals Helper
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); }
+
+        // Save Handlers
+        function saveGoat(e) {
+            e.preventDefault();
+            herd.push({
+                tag: document.getElementById('goat-tag').value,
+                name: document.getElementById('goat-name').value || 'غیر نامزد',
+                breed: document.getElementById('goat-breed').value,
+                gender: document.getElementById('goat-gender').value,
+                status: document.getElementById('goat-status').value
+            });
+            localStorage.setItem('goat_herd_v2', JSON.stringify(herd));
+            closeModal('add-goat-modal');
+            document.getElementById('goat-form').reset();
+            renderAll();
+        }
+
+        function saveHealthRecord(e) {
+            e.preventDefault();
+            healthRecords.unshift({
+                date: document.getElementById('health-date').value,
+                tag: document.getElementById('health-tag').value,
+                type: document.getElementById('health-type').value,
+                desc: document.getElementById('health-desc').value,
+                famacha: document.getElementById('health-famacha').value
+            });
+            localStorage.setItem('goat_health_v2', JSON.stringify(healthRecords));
+            closeModal('add-health-modal');
+            document.getElementById('health-form').reset();
+            renderAll();
+        }
+
+        function saveFinanceRecord(e) {
+            e.preventDefault();
+            financeRecords.unshift({
+                date: document.getElementById('finance-date').value,
+                type: document.getElementById('finance-type').value,
+                desc: document.getElementById('finance-desc').value,
+                amount: parseFloat(document.getElementById('finance-amount').value)
+            });
+            localStorage.setItem('goat_finance_v2', JSON.stringify(financeRecords));
+            closeModal('add-finance-modal');
+            document.getElementById('finance-form').reset();
+            renderAll();
+        }
+
+        // Delete Handlers
+        function deleteGoat(idx) { if(confirm('حذف کریں؟')) { herd.splice(idx, 1); localStorage.setItem('goat_herd_v2', JSON.stringify(herd)); renderAll(); } }
+        function deleteHealth(idx) { if(confirm('حذف کریں؟')) { healthRecords.splice(idx, 1); localStorage.setItem('goat_health_v2', JSON.stringify(healthRecords)); renderAll(); } }
+        function deleteFinance(idx) { if(confirm('حذف کریں؟')) { financeRecords.splice(idx, 1); localStorage.setItem('goat_finance_v2', JSON.stringify(financeRecords)); renderAll(); } }
+
+        // Render Tables & Stats
+        function renderAll() {
+            const selectedMonth = document.getElementById('dashboard-month-filter').value;
+
+            // Stats Filtering
+            document.getElementById('stat-total-goats').innerText = herd.length;
+
+            const monthlyFinances = financeRecords.filter(f => f.date.startsWith(selectedMonth));
+            const monthIncome = monthlyFinances.filter(f => f.type === 'income').reduce((sum, item) => sum + item.amount, 0);
+            const monthExpense = monthlyFinances.filter(f => f.type === 'expense').reduce((sum, item) => sum + item.amount, 0);
+            const monthProfit = monthIncome - monthExpense;
+
+            document.getElementById('stat-month-income').innerText = 'Rs ' + monthIncome.toLocaleString();
+            document.getElementById('stat-month-expense').innerText = 'Rs ' + monthExpense.toLocaleString();
+            document.getElementById('stat-month-profit').innerText = 'Rs ' + monthProfit.toLocaleString();
+
+            // Dashboard Health Alerts
+            const alertsContainer = document.getElementById('dashboard-health-alerts');
+            const todayAlerts = healthRecords.filter(h => h.date === todayStr);
+            if(todayAlerts.length === 0) {
+                alertsContainer.innerHTML = `<p class="text-xs text-gray-400">آج کے دن کے لیے کوئی صحتی اینٹری موجود نہیں ہے۔</p>`;
+            } else {
+                alertsContainer.innerHTML = todayAlerts.map(a => `
+                    <div class="p-3 bg-amber-50 border-r-4 border-amber-500 rounded text-xs flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-gray-800">[ٹیگ ${a.tag}] ${a.type}</span>
+                            <p class="text-gray-600 mt-0.5">${a.desc}</p>
+                        </div>
+                        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">${a.famacha}</span>
+                    </div>
+                `).join('');
+            }
+
+            renderHerdTable();
+            renderHealthTable();
+            renderFinanceTable();
+        }
+
+        function renderHerdTable() {
+            document.getElementById('goat-table-body').innerHTML = herd.map((g, i) => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-4 font-bold text-emerald-900">${g.tag}</td>
+                    <td class="p-4">${g.name}</td>
+                    <td class="p-4">${g.breed}</td>
+                    <td class="p-4">${g.gender}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${g.status === 'صحت مند' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">${g.status}</span></td>
+                    <td class="p-4 text-center"><button onclick="deleteGoat(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderHealthTable() {
+            const filterDate = document.getElementById('health-date-filter').value;
+            let list = healthRecords;
+            if(filterDate) list = list.filter(h => h.date === filterDate);
+
+            document.getElementById('health-table-body').innerHTML = list.map((h, i) => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-4 text-xs text-gray-500">${h.date}</td>
+                    <td class="p-4 font-bold text-emerald-900">${h.tag}</td>
+                    <td class="p-4"><span class="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs">${h.type}</span></td>
+                    <td class="p-4">${h.desc}</td>
+                    <td class="p-4 text-center text-xs font-bold">${h.famacha}</td>
+                    <td class="p-4 text-center"><button onclick="deleteHealth(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderFinanceTable() {
+            const filterMonth = document.getElementById('finance-month-filter').value;
+            let list = financeRecords;
+            if(filterMonth) list = list.filter(f => f.date.startsWith(filterMonth));
+
+            document.getElementById('finance-table-body').innerHTML = list.map((f, i) => `
+                <tr class="hover:bg-gray-50 border-b">
+                    <td class="p-4 text-xs text-gray-500">${f.date}</td>
+                    <td class="p-4"><span class="px-2 py-1 rounded text-xs font-semibold ${f.type === 'income' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${f.type === 'income' ? 'آمدن' : 'خرچہ'}</span></td>
+                    <td class="p-4">${f.desc}</td>
+                    <td class="p-4 font-bold ${f.type === 'income' ? 'text-green-600' : 'text-red-600'}">Rs ${f.amount.toLocaleString()}</td>
+                    <td class="p-4 text-center"><button onclick="deleteFinance(${i})" class="text-red-500 text-xs"><i class="fa-solid fa-trash"></i></button></td>
+                </tr>
+            `).join('');
+        }
+
+        // Export Data To CSV
+        function exportDataCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Type,Date,Tag/Desc,Amount/Status\n";
+            financeRecords.forEach(f => {
+                csvContent += `Finance,${f.date},${f.desc},${f.amount}\n`;
+            });
+            healthRecords.forEach(h => {
+                csvContent += `Health,${h.date},${h.tag} - ${h.desc},${h.famacha}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `goat_farm_records_${todayStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        window.onload = function() { renderAll(); };
+    </script>
+</body>
+</html>
